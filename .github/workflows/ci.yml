@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 本包零运行时依赖（peer 依赖由宿主提供），所以不需要 install 步骤
+      - name: Syntax check
+        run: |
+          node --check src/index.js
+          node --check src/guard.js
+
+      - name: Unit tests
+        run: node test/guard.test.mjs
+
+      - name: Hook scripts syntax
+        run: |
+          python3 -m py_compile hooks/memory_guard.py
+          python3 -m py_compile skills/project-memory/scripts/append_memory.py

@@ -41,23 +41,44 @@ install.ps1           两条安装路线，带备份、幂等、-DryRun
 
 ## 安装
 
-以当前目录为包根（克隆下来的 `dsh-project-memory`）。
-
-### A. bundle 路线（推荐）
+**本包没有发布到 npm，只能从仓库本地安装。** 整体是「克隆 → 跑脚本 → 重启 DSH」。
 
 ```powershell
-# 已发布到 npm 后
-dsh plugin --profile desktop add dsh-project-memory
-
-# 尚未发布时用本地路径（把路径换成你克隆的位置）
-dsh plugin --profile desktop add file:C:/path/to/dsh-project-memory
+git clone https://github.com/HaoDuoYv/dsh-project-memory.git
+cd dsh-project-memory
 ```
 
-然后把 `"dsh-project-memory"` 加进 `%USERPROFILE%\.dsh\profiles\desktop\package.json` 的 `dsh.profile.bundles` 数组，重启 DSH。包自带的 `cordis.patch.yml` 会自动插入插件行。
+然后二选一（**不要两条都装**，见「已知限制」）。
 
-### B. 手工 insert 路线
+### 路线 1：钩子路线（不需要把包装进 profile 依赖，最快）
 
-本地文件依赖或已 npm 安装时，在 `%USERPROFILE%\.dsh\profiles\desktop\cordis.patch.yml` 末尾追加：
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -Route hooks
+```
+
+它会做三件事：把技能复制到 `%DSH_HOME%\skills\project-memory`；把 `hooks/hooks.json` 里的 `{{PYTHON}}` / `{{GUARD}}` 占位符换成真实绝对路径后落到 `%DSH_HOME%\hooks.json`；把 `@deepseek-ai/dsh-hooks-claude-code` 钩子桥 insert 进 profile 补丁。改动前都会先备份。
+
+代价：每次命中工具调用要起一个 python 进程。
+
+### 路线 2：插件路线（无子进程，需要把包装进 profile）
+
+```powershell
+# 注意 file: 后面是本机绝对路径，用正斜杠
+dsh plugin --profile desktop add file:C:/Users/Administrator/Desktop/micis/dsh-project-memory
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+再把 `"dsh-project-memory"` 加进 `%USERPROFILE%\.dsh\profiles\desktop\package.json` 的 `dsh.profile.bundles` 数组。包自带的 `cordis.patch.yml` 会自动插入插件行。
+
+### 最后一步：重启 DSH
+
+两条路线都要重启（profile 补丁只在启动时读一次）。技能正文改动不需要重启。
+
+`-ExecutionPolicy Bypass` 是因为 install.ps1 不在受信任签名白名单里；脚本本身自带 UTF-8 BOM，PS 5.1 才能正确解码中文。加 `-DryRun` 可以先看它要做什么，不写任何文件。
+
+### 附：手工 insert（不想跑脚本时）
+
+在 `%USERPROFILE%\.dsh\profiles\desktop\cordis.patch.yml` 末尾追加：
 
 ```yaml
 - insert:
@@ -70,21 +91,6 @@ dsh plugin --profile desktop add file:C:/path/to/dsh-project-memory
 ```
 
 然后重启 DSH。注意：**profile 补丁没有"直接写一行就新增插件"的语义**，漏掉 `- insert:` 外壳会报 `patch: entry not found` 并被静默跳过。
-
-### C. 降级钩子路线（不装插件）
-
-用 `hooks/hooks.json` + `@deepseek-ai/dsh-hooks-claude-code` 钩子桥：
-
-```powershell
-cd dsh-project-memory
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -Route hooks
-```
-
-（`-ExecutionPolicy Bypass` 是因为 install.ps1 不在受信任签名白名单里；脚本本身自带 UTF-8 BOM，PS 5.1 才能正确解码中文。）
-
-它会探测 python 解释器、把 `hooks/hooks.json` 里的 `{{PYTHON}}` / `{{GUARD}}` 占位符换成真实绝对路径并落到 `%DSH_HOME%\hooks.json`、再把 `@deepseek-ai/dsh-hooks-claude-code` 钩子桥 insert 进 profile 补丁，然后重启 DSH。
-
-差异：这条路每次命中的工具调用要起一个 python 进程，且依赖钩子桥；插件路线没有进程开销。
 
 ## 配置项
 

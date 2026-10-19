@@ -1,0 +1,44 @@
+{
+  "_comment": [
+    "降级路线（Route C）的钩子配置模板。不要直接拿去用：里面两个 {{...}} 占位符",
+    "必须换成真实绝对路径。跑 `install.ps1 -Route hooks` 会自动探测 python 并把本文件",
+    "落到 %DSH_HOME%\\hooks.json，同时把 @deepseek-ai/dsh-hooks-claude-code 钩子桥",
+    "insert 进 profile 补丁。改完必须重启 DSH 才生效。"
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 20,
+            "command": "\"{{PYTHON}}\" \"{{GUARD}}\" session-start"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "write|edit|str_replace_editor|pwsh|bash|run_code|shell",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 20,
+            "command": "\"{{PYTHON}}\" \"{{GUARD}}\" post-tool-use"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 20,
+            "command": "\"{{PYTHON}}\" \"{{GUARD}}\" stop"
+          }
+        ]
+      }
+    ]
+  }
+}

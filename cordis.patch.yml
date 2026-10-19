@@ -1,0 +1,15 @@
+# dsh-project-memory bundle patch
+#
+# 把本包加进 profile 的 `dsh.profile.bundles` 后，这一层会自动叠上来：
+# 往宿主树里插入本插件一行（默认配置）。
+# 如果只是手工 `- insert:` 一行，就不需要 bundles，也不会用到本文件。
+- insert:
+    - id: project-memory
+      name: "dsh-project-memory"
+      config:
+        enabled: true
+        memoryDir: .dsh/memory
+        maxBlocksPerCycle: 1
+        maxBlocksTotal: 6
+        reminder: true
+        stateTtlDays: 7

@@ -1,0 +1,24 @@
+# 依赖与构建产物
+node_modules/
+pnpm-lock.yaml
+
+# 发布/打包产物
+*.tgz
+*.zip
+dist/
+
+# 安装器与手工改配置时留下的备份（install.ps1 会写 <file>.bak-memory-<时间戳>）
+*.bak-*
+*.bak
+
+# 编辑器与系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 本地临时文件
+*.log
+*.tmp
+.tmp-*/

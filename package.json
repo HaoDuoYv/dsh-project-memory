@@ -1,0 +1,56 @@
+{
+  "name": "dsh-project-memory",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness plugin: enforce project memory at wrap-up. Stop hook blocks once when a session did work but wrote nothing under .dsh/memory/, forcing one more turn to summarise.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./guard": "./src/guard.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "skills",
+    "hooks",
+    "cordis.patch.yml",
+    "install.ps1",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "memory",
+    "agent-memory",
+    "project-memory"
+  ],
+  "license": "MIT",
+  "author": "HaoDuoYv",
+  "homepage": "https://github.com/HaoDuoYv/dsh-project-memory#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HaoDuoYv/dsh-project-memory.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HaoDuoYv/dsh-project-memory/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node test/guard.test.mjs"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-llm": "*",
+    "@deepseek-ai/schemastery": "*"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dshTarget": "0.2.0-rc.2"
+}

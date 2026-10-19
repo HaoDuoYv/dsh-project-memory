@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    安装 dsh-project-memory 到本机 DSH。
+    安装 @haoduoyv/dsh-project-memory 到本机 DSH。
 
 .DESCRIPTION
     两条路线：
@@ -102,10 +102,10 @@ if ($Route -eq 'plugin') {
 
     $pluginYaml = @"
 
-# dsh-project-memory：收尾必须写项目记忆（原生插件，agent/turn-stopping）
+# @haoduoyv/dsh-project-memory：收尾必须写项目记忆（原生插件，agent/turn-stopping）
 - insert:
     - id: project-memory
-      name: "dsh-project-memory"
+      name: "@haoduoyv/dsh-project-memory"
       config:
         enabled: true
         memoryDir: .dsh/memory
@@ -113,11 +113,11 @@ if ($Route -eq 'plugin') {
         maxBlocksTotal: 6
         reminder: true
 "@
-    Add-PatchEntry -Marker 'dsh-project-memory' -Yaml $pluginYaml
+    Add-PatchEntry -Marker '@haoduoyv/dsh-project-memory' -Yaml $pluginYaml
 
-    Write-Step '还差一步：把 dsh-project-memory 装进该 profile 的依赖'
-    Write-Step "          dsh plugin --profile $ProfileName add dsh-project-memory"
-    Write-Step '          并确认该 profile 的 package.json 里 dsh.profile.bundles 含 dsh-project-memory'
+    Write-Step '还差一步：把 @haoduoyv/dsh-project-memory 装进该 profile 的依赖'
+    Write-Step "          dsh plugin --profile $ProfileName add @haoduoyv/dsh-project-memory"
+    Write-Step '          并确认该 profile 的 package.json 里 dsh.profile.bundles 含 @haoduoyv/dsh-project-memory'
 }
 else {
     Write-Host '[2/3] 收尾守卫：hooks 桥 + python 脚本'
@@ -173,5 +173,5 @@ Write-Host '  技能正文改动不需要重启（每次加载都重读文件）
 if ($Route -eq 'hooks') {
     Write-Host '  钩子路线：每条命中工具调用会起一个 python 进程；确认 hooks.json 里的路径真实存在。'
 } else {
-    Write-Host '  插件路线：确认该 profile 的 dsh.profile.bundles 含 dsh-project-memory。'
+    Write-Host '  插件路线：确认该 profile 的 dsh.profile.bundles 含 @haoduoyv/dsh-project-memory。'
 }

@@ -1,5 +1,5 @@
 {
-  "name": "dsh-project-memory",
+  "name": "@haoduoyv/dsh-project-memory",
   "version": "0.1.0",
   "description": "DeepSeek Harness plugin: enforce project memory at wrap-up. Stop hook blocks once when a session did work but wrote nothing under .dsh/memory/, forcing one more turn to summarise.",
   "type": "module",
@@ -36,6 +36,9 @@
   },
   "bugs": {
     "url": "https://github.com/HaoDuoYv/dsh-project-memory/issues"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "engines": {
     "node": ">=18"

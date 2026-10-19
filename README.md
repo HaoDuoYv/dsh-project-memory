@@ -27,12 +27,30 @@
 
 从会话 cwd 逐级向上找最近的 `.git`，找到就用那一级；一路到盘根都没有就用 cwd 本身。**故意不认 `.dsh` 标记**：`~/.dsh` 是 DSH 自己的 home，认了会把用户主目录当成项目根。
 
+## 仓库结构
+
+```
+src/index.js          宿主侧插件（export name / Config / apply），只做接线
+src/guard.js          判定核心：纯函数、零宿主 import，可裸 node 单测
+test/guard.test.mjs   11 个用例（node test/guard.test.mjs）
+skills/project-memory/  给模型看的规范 + 只追加写入器 append_memory.py
+hooks/                降级路线：hooks.json 模板 + memory_guard.py
+cordis.patch.yml      bundle 层：把本插件 insert 进宿主树
+install.ps1           两条安装路线，带备份、幂等、-DryRun
+```
+
 ## 安装
+
+以当前目录为包根（克隆下来的 `dsh-project-memory`）。
 
 ### A. bundle 路线（推荐）
 
 ```powershell
+# 已发布到 npm 后
 dsh plugin --profile desktop add dsh-project-memory
+
+# 尚未发布时用本地路径（把路径换成你克隆的位置）
+dsh plugin --profile desktop add file:C:/path/to/dsh-project-memory
 ```
 
 然后把 `"dsh-project-memory"` 加进 `%USERPROFILE%\.dsh\profiles\desktop\package.json` 的 `dsh.profile.bundles` 数组，重启 DSH。包自带的 `cordis.patch.yml` 会自动插入插件行。

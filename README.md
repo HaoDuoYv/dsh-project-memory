@@ -41,14 +41,14 @@ install.ps1           两条安装路线，带备份、幂等、-DryRun
 
 ## 安装
 
-**本包没有发布到 npm，只能从仓库本地安装。** 整体是「克隆 → 跑脚本 → 重启 DSH」。
+包名是 **`@haoduoyv/dsh-project-memory`**（GitHub Packages 强制作用域）。三条路，**只装一条**（见「已知限制」）。
+
+前两条**不需要任何账号**，是推荐路径。
 
 ```powershell
 git clone https://github.com/HaoDuoYv/dsh-project-memory.git
 cd dsh-project-memory
 ```
-
-然后二选一（**不要两条都装**，见「已知限制」）。
 
 ### 路线 1：钩子路线（不需要把包装进 profile 依赖，最快）
 
@@ -68,11 +68,28 @@ dsh plugin --profile desktop add file:C:/Users/Administrator/Desktop/micis/dsh-p
 powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-再把 `"dsh-project-memory"` 加进 `%USERPROFILE%\.dsh\profiles\desktop\package.json` 的 `dsh.profile.bundles` 数组。包自带的 `cordis.patch.yml` 会自动插入插件行。
+再把 `"@haoduoyv/dsh-project-memory"` 加进 `%USERPROFILE%\.dsh\profiles\desktop\package.json` 的 `dsh.profile.bundles` 数组。包自带的 `cordis.patch.yml` 会自动插入插件行。
+
+### 路线 3：从 GitHub Packages 装（需要令牌，最省事但也最麻烦）
+
+GPR 上装了包之后可以省掉克隆，但**每次安装都要带 `read:packages` 权限的令牌**，所以只推荐给已经配好令牌的机器：
+
+```powershell
+# 1) 先让 npm 认得 GPR（追加两行到用户 .npmrc；{TOKEN} 换成你的 PAT）
+@"
+@haoduoyv:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken={TOKEN}
+"@ | Out-File $env:USERPROFILE\.npmrc -Append -Encoding ascii
+
+# 2) 装插件（不需要克隆）
+dsh plugin --profile desktop add "@haoduoyv/dsh-project-memory"
+```
+
+技能文件仍需落到 `%DSH_HOME%\skills`，所以还得有一次仓库（或脚本）可用 —— 这条路线只省了 profile 依赖那一步，实际收益有限，列在这里是为了完整性。
 
 ### 最后一步：重启 DSH
 
-两条路线都要重启（profile 补丁只在启动时读一次）。技能正文改动不需要重启。
+三条路线都要重启（profile 补丁只在启动时读一次）。技能正文改动不需要重启。
 
 `-ExecutionPolicy Bypass` 是因为 install.ps1 不在受信任签名白名单里；脚本本身自带 UTF-8 BOM，PS 5.1 才能正确解码中文。加 `-DryRun` 可以先看它要做什么，不写任何文件。
 
@@ -83,7 +100,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 ```yaml
 - insert:
     - id: project-memory
-      name: "dsh-project-memory"
+      name: "@haoduoyv/dsh-project-memory"
       config:
         memoryDir: .dsh/memory
         maxBlocksPerCycle: 1
@@ -91,6 +108,28 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
 然后重启 DSH。注意：**profile 补丁没有"直接写一行就新增插件"的语义**，漏掉 `- insert:` 外壳会报 `patch: entry not found` 并被静默跳过。
+
+## 发布到 GitHub Packages
+
+已配置好，两条触发方式：
+
+- **GitHub Release**：在仓库里创建 release 即自动触发 `.github/workflows/publish.yml`（`release: [created]`），用 `secrets.GITHUB_TOKEN` 发布，job 声明了 `permissions: packages: write`。
+- **手动**：Actions → `Publish to GitHub Packages` → Run workflow（可勾 `dry_run` 只跑测试）。
+
+本地直发（`npm publish`）需要 **`write:packages`** 权限的令牌。注意 Git 凭据管理器里存的那种 `gho_` OAuth 令牌**不带**这个 scope，会得到：
+
+```
+E403 403 Forbidden - PUT https://npm.pkg.github.com/@haoduoyv%2fdsh-project-memory
+npm error Permission permission_denied: The token provided does not match expected scopes.
+```
+
+要本地发，去 GitHub 建一个 classic PAT 勾 `write:packages`（细粒度令牌则勾 Packages: Read and write），然后：
+
+```powershell
+npm publish --registry https://npm.pkg.github.com "--//npm.pkg.github.com/:_authToken=<PAT>"
+```
+
+`package.json` 里已有 `publishConfig.registry`，默认就发到 GPR；版本号在 `package.json` 的 `version`，同一个版本不能重发。
 
 ## 配置项
 
@@ -127,7 +166,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 
 ## 已知限制
 
-- 状态目录固定 `<DSH_HOME>/project-memory/state`，与 C 路线 `memory-guard` 的目录不同 → **两条路线不要同时装**，否则各自计数、可能拦两次。
+- 状态目录固定 `<DSH_HOME>/project-memory/state`，与钩子路线的 `<DSH_HOME>/memory-guard` 不同 → **路线 1 与路线 2/3 不要同时装**，否则各自计数、一个周期可能拦两次。
+- npmjs 上没有这个包（同名无作用域包 `dsh-project-memory` 属他人）；本包只发 GitHub Packages，且装它要 `read:packages` 令牌。
+- Git 凭据管理器里的 `gho_` 令牌可以 `whoami` 通过，但**没有 `write:packages`**，不能用于发布（会用 `E403 permission_denied` 拒绝）。
 - 只认上列 5 类工具名；自定义工具改了文件不会被计入证据。
 - 依赖 `@deepseek-ai/dsh-llm` 的 `createUserMessage` 与 `@deepseek-ai/schemastery`，两者都是宿主提供的 peerDependency，不随包发布。
 - `dshTarget` 标的是 `0.2.0-rc.2`，DSH 演进后扩展点签名可能变。

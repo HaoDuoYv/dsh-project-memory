@@ -116,7 +116,7 @@ if ($Route -eq 'plugin') {
     Add-PatchEntry -Marker '@haoduoyv/dsh-project-memory' -Yaml $pluginYaml
 
     Write-Step '还差一步：把 @haoduoyv/dsh-project-memory 装进该 profile 的依赖'
-    Write-Step "          dsh plugin --profile $ProfileName add @haoduoyv/dsh-project-memory"
+    Write-Step "          dsh plugin --profile $ProfileName add file:$PackageRoot"
     Write-Step '          并确认该 profile 的 package.json 里 dsh.profile.bundles 含 @haoduoyv/dsh-project-memory'
 }
 else {
